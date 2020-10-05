@@ -1,0 +1,14 @@
+[run]
+source =
+    rankereval
+
+[report]
+omit =
+    */python?.?/*
+    */site-packages/nose/*
+    # ignore _version.py and versioneer.py
+    */docs/source/conf.py
+    *__init__.py*
+
+exclude_lines =
+    if __name__ == '__main__':
