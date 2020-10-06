@@ -1,30 +1,30 @@
 ============
 Data Formats
 ============
-RankEval distinguishes explicitly between ground truth labels and predictions. 
+rankereval distinguishes explicitly between ground truth labels and predictions. 
 This avoids accidental swapping of arguments and allows for additional type and consistency checking.
 
 .. autosummary::
 	:nosignatures:
 
-	rankeval.data.BinaryLabels
-	rankeval.data.NumericLabels
-	rankeval.data.Rankings
+	rankereval.data.BinaryLabels
+	rankereval.data.NumericLabels
+	rankereval.data.Rankings
 	
 
 Ground truth labels
 -------------------
-.. autoclass:: rankeval.data.BinaryLabels
+.. autoclass:: rankereval.data.BinaryLabels
    :members:
    :inherited-members:
 
-.. autoclass:: rankeval.data.NumericLabels
+.. autoclass:: rankereval.data.NumericLabels
    :members:
    :inherited-members:
    
    
 Predicted rankings
 ------------------
-.. autoclass:: rankeval.data.Rankings
+.. autoclass:: rankereval.data.Rankings
    :members:
    :inherited-members:

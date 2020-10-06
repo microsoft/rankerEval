@@ -6,14 +6,14 @@ All metrics allow you to get both individual scores as well as mean scores:
 .. autosummary:: 
    :nosignatures:
 
-   rankeval.metrics.Metric.score
-   rankeval.metrics.Metric.mean
+   rankereval.metrics.Metric.score
+   rankereval.metrics.Metric.mean
 
 The code below shows how ReciprocalRank@3 scores as well as *mean* ReciprocalRank@3 (MRR@3) can be computed:
 
 .. code-block:: python
 
-	from rankeval import BinaryLabels, Rankings, ReciprocalRank
+	from rankereval import BinaryLabels, Rankings, ReciprocalRank
 	
 	# define some input data
 	y_true = BinaryLabels.from_positive_indices([[0, 5],[1,2,3]])
@@ -33,59 +33,59 @@ You can also obtain bootstrapped confidence intervals when passing `conf_interva
 
 .. note::
 
-	RankEval was designed so that metrics return ``NaN`` values in ill-specified cases.
+	rankereval was designed so that metrics return ``NaN`` values in ill-specified cases.
 	If you observe a ``NaN`` value, please consult the documentation below and make sure you understand
 	why it occurred. You can then either remove the ranking(s) from your input data, or handle them via the `nan_handling` option.
 	
 Base class
 -----------
    
-.. autoclass:: rankeval.metrics.Metric
+.. autoclass:: rankereval.metrics.Metric
    :members:
 
 Precision@k
 -----------
-.. autoclass:: rankeval.metrics.Precision
+.. autoclass:: rankereval.metrics.Precision
    :members:
    
 Recall@k
 --------
-.. autoclass:: rankeval.metrics.Recall
+.. autoclass:: rankereval.metrics.Recall
    :members:
 
 F1@k
 ----
-.. autoclass:: rankeval.metrics.F1
+.. autoclass:: rankereval.metrics.F1
    :members:
 
 HitRate@k
 ---------
-.. autoclass:: rankeval.metrics.HitRate
+.. autoclass:: rankereval.metrics.HitRate
    :members:
 
 ReciprocalRank@k
 ----------------
-.. autoclass:: rankeval.metrics.ReciprocalRank
+.. autoclass:: rankereval.metrics.ReciprocalRank
    :members:
 
 AveragePrecision@k
 ------------------
-.. autoclass:: rankeval.metrics.AP
+.. autoclass:: rankereval.metrics.AP
    :members:
 
 MeanRanks
 ---------
-.. autoclass:: rankeval.metrics.MeanRanks
+.. autoclass:: rankereval.metrics.MeanRanks
    :members:
 
 DCG@k
 -----
-.. autoclass:: rankeval.metrics.DCG
+.. autoclass:: rankereval.metrics.DCG
    :members:
 
 NDCG@k
 ------
-.. autoclass:: rankeval.metrics.NDCG
+.. autoclass:: rankereval.metrics.NDCG
    :members:
 
 References
