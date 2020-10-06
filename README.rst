@@ -1,8 +1,8 @@
 RankerEval
 =========
 
-.. image:: https://img.shields.io/pypi/v/rank-eval.svg
-    :target: https://pypi.python.org/pypi/rank-eval
+.. image:: https://img.shields.io/pypi/v/rankereval.svg
+    :target: https://pypi.python.org/pypi/rankereval
     :alt: Latest PyPI version
 
 .. image:: TRAVIS_URL_TO.png
@@ -26,7 +26,7 @@ Usage
 -----
 .. code-block:: python
 
-	from rankeval import BinaryLabels, Rankings, Recall
+	from rankereval import BinaryLabels, Rankings, Recall
 	
 	y_true = BinaryLabels.from_positive_indices([[0,2], [0,1,2]])
 	y_pred = Rankings.from_ranked_indices([[2,1], [1]])
@@ -44,7 +44,7 @@ To get confidence intervals (95% by default), specify ``conf_interval=True``:
 	
 Input formats
 +++++++++++++
-RankEval allows for a variety of input formats, e.g., 
+RankerEval allows for a variety of input formats, e.g., 
 
 .. code-block:: python
 
@@ -64,7 +64,7 @@ To install (requires Numpy 1.18 or newer):
 
 .. code-block:: bash
 
-    pip install rankeval
+    pip install rankereval
 
 
 
@@ -77,7 +77,7 @@ This project is licensed under `MIT <https://choosealicense.com/licenses/mit/>`_
 Authors
 -------
 
-`rank-eval` was written by `Tobias Schnabel <tobias.schnabel@microsoft.com>`_.
+`RankerEval` was written by `Tobias Schnabel <tobias.schnabel@microsoft.com>`_.
 
 
 Contributing
@@ -91,7 +91,7 @@ When you submit a pull request, a CLA bot will automatically determine whether y
 a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
 provided by the bot. You will only need to do this once across all repos using our CLA.
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+This project has adopted the `Microsoft Open Source Code of Conduct <https://opensource.microsoft.com/codeofconduct/>`_.
+For more information see the `Code of Conduct FAQ <https://opensource.microsoft.com/codeofconduct/faq/>`_ or
+contact `opencode@microsoft.com <mailto:opencode@microsoft.com>` with any additional questions or comments.
 

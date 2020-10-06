@@ -26,10 +26,11 @@ setup(
     keywords='ranking recommendation evaluation map mrr',
     long_description=read("README.rst"),
 
-    packages=find_packages(exclude=('tests',)),
+    packages=find_packages(exclude=('tests','docs','test')),
 
     install_requires=['numpy>=1.18'],
-
+    python_requires='>=3',
+    
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: MIT License',
