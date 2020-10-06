@@ -9,6 +9,8 @@ RankerEval
    :target: TRAVIS_URL_TO
    :alt: Latest Travis CI build status
 
+Find the full `documentation here <https://rankereval.readthedocs.io>`_.
+
 .. inclusion-marker-start
 
 
@@ -17,10 +19,10 @@ Coded with efficiency in mind and support for edge cases.
 
 Features
 --------
-  * Wide array of evaluation metrics for information retrieval and top-N recommender systems
-  * Flexible input formats: Supports masked arrays and sparse matrices 
-  * Built-in support for confidence intervals via bootstrapping
-  * Minimal dependencies: Numpy (required), SciPy (optional)
+* Wide array of evaluation metrics for information retrieval and top-N recommender systems
+* Flexible input formats: Supports masked arrays and sparse matrices 
+* Built-in support for confidence intervals via bootstrapping
+* Minimal dependencies: Numpy (required), SciPy (optional)
   
 Usage
 -----
