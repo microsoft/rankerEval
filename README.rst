@@ -1,5 +1,5 @@
 RankerEval
-=========
+==========
 
 .. image:: https://img.shields.io/pypi/v/rankereval.svg
     :target: https://pypi.python.org/pypi/rankereval
@@ -9,13 +9,12 @@ RankerEval
    :target: https://github.com/microsoft/rankerEval/actions
    :alt: Latest GitHub actions build status
 
-Find the full `documentation here <https://rankereval.readthedocs.io>`_.
-
 .. inclusion-marker-start
-
 
 A fast numpy-based implementation of ranking metrics for information retrieval and recommendation.
 Coded with efficiency in mind and support for edge cases. 
+
+Find the full `documentation here <https://rankereval.readthedocs.io>`_.
 
 Features
 --------
@@ -50,10 +49,13 @@ RankerEval allows for a variety of input formats, e.g.,
 
 .. code-block:: python
 
-	# specify positive indices only
+	# specify all labels as lists
 	y_true = BinaryLabels.from_dense([[1,0,1], [1,1,1]])
 	
-	# or use sparse matrix
+    # specify labels as numpy array
+	y_true = BinaryLabels.from_dense(np.asarray([[1,0,1], [1,1,1]]))
+    
+	# or use a sparse matrix
 	import scipy.sparse as sp
 	y_true = BinaryLabels.from_sparse(sp.coo_matrix([[1,0,1], [1,1,1]]))
 
