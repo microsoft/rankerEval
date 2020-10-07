@@ -5,9 +5,9 @@ RankerEval
     :target: https://pypi.python.org/pypi/rankereval
     :alt: Latest PyPI version
 
-.. image:: TRAVIS_URL_TO.png
-   :target: TRAVIS_URL_TO
-   :alt: Latest Travis CI build status
+.. image:: https://github.com/microsoft/rankerEval/workflows/Python%20package/badge.svg
+   :target: https://github.com/microsoft/rankerEval/actions
+   :alt: Latest GitHub actions build status
 
 Find the full `documentation here <https://rankereval.readthedocs.io>`_.
 
