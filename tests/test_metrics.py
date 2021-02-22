@@ -1,5 +1,5 @@
 from rankereval import BinaryLabels, NumericLabels, Rankings
-from rankereval import Precision, Recall, F1, HitRate, AP, ReciprocalRank, DCG, NDCG, MeanRanks
+from rankereval import Precision, TruncatedPrecision, Recall, F1, HitRate, AP, ReciprocalRank, DCG, NDCG, MeanRanks
 
 import pytest
 from pytest import approx
@@ -167,6 +167,32 @@ class TestPrecision:
         y_gold = BinaryLabels.from_positive_indices(y_gold)
         y_pred = Rankings.from_ranked_indices(y_pred)
         pred = Precision(k).score(y_gold, y_pred).tolist()
+        assert pred == approx(expect, nan_ok=True)
+
+
+class TestTruncatedPrecision:
+    @pytest.mark.parametrize("k,y_gold,y_pred,expect", [
+        (3, y2, r1, [0.0]),
+        (10, y2, r1, [0.2]),
+        (2, y2, r2, [1.0]),
+        (10, y2, r3, [float('nan')]),
+        (10, y3, r3, [
+            float('nan')]),
+        (10, y3, r2, [
+            float('nan')]),
+        (1, y2, r2, [1.0]),
+        (6, y4, r4, [2.0 / 3]),
+        (6, y2, r4, [1.0 / 3]),
+        (3, y2, r4, [1.0 / 3]),
+        (1, y1, [r1, r2],
+         [1.0, 0.0]),
+        (1, [y1, y2], [
+            r1, r2], [1.0, 1.0])
+    ])
+    def test_score(self, k, y_gold, y_pred, expect):
+        y_gold = BinaryLabels.from_positive_indices(y_gold)
+        y_pred = Rankings.from_ranked_indices(y_pred)
+        pred = TruncatedPrecision(k).score(y_gold, y_pred).tolist()
         assert pred == approx(expect, nan_ok=True)
 
 

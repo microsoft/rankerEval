@@ -1,6 +1,7 @@
 from rankereval import BinaryLabels, NumericLabels, Rankings
 import pytest
 import scipy.sparse as sp
+import numpy as np
 
 r1 = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0]
 r2 = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1]
@@ -140,6 +141,10 @@ class TestRankings:
 
     @pytest.mark.parametrize("input,expected,has_warning", [
         ([0, 1], [[1, 0]], False),
+        (np.ma.masked_array([[0, 1, 2], [5, 4, 3]], mask=[
+         [True, False, False], [False, True, False]]), [[2, 1], [0, 2]], False),
+        (np.asarray([0, 1]), [[1, 0]], False),
+        (np.asarray([[0, 1], [3, 2]]), [[1, 0], [0, 1]], False),
         ([[4, 1], [2, 5, 6], [3, float('nan'), 4, float('inf')]],
          [[0, 1], [2, 1, 0], [2, 0]], True)
     ])

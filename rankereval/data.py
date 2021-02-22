@@ -336,8 +336,13 @@ class Rankings(object):
         """
         scores = _parse_numpy(raw_scores, allow_non_finite_numbers=True)
 
-        sorted_indices = np.argsort(-scores)
-        mask = np.take_along_axis(scores.mask, sorted_indices, axis=-1)
+        sorted_indices = (-scores).argsort(axis=-1, kind="stable")
+
+        if isinstance(scores.mask, np.bool_):
+            mask = scores.mask
+        else:
+            mask = np.take_along_axis(scores.mask, sorted_indices, axis=-1)
+
         indices = ma.masked_array(sorted_indices, mask=mask)
 
         return cls()._set_indices(indices)

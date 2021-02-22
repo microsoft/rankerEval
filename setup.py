@@ -1,6 +1,5 @@
 import io
 import os
-import re
 
 from setuptools import find_packages
 from setuptools import setup
@@ -14,7 +13,7 @@ def read(filename):
 
 setup(
     name="rankerEval",
-    version="0.1.0",
+    version="0.1.1",
     url="https://github.com/microsoft/rankerEval",
     license='MIT',
 
@@ -25,11 +24,11 @@ setup(
     keywords='ranking recommendation evaluation map mrr',
     long_description=read("README.rst"),
     long_description_content_type="text/x-rst",
-    packages=find_packages(exclude=('tests','docs','test')),
+    packages=find_packages(exclude=('tests', 'docs', 'test')),
 
     install_requires=['numpy>=1.18'],
     python_requires='>=3',
-    
+
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: MIT License',
