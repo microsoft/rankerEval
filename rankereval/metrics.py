@@ -380,7 +380,7 @@ class Recall(BinaryMetric):
         >>> # use separate labels for each ranking
         >>> y_true = BinaryLabels.from_positive_indices([[0, 5],[1]])
         >>> y_pred = Rankings.from_ranked_indices([[3,2,1], [1,2]])
-        >>> Recall(3).score(y_true, y_pred) #doctest: +NORMALIZE_WHITESPACE
+        >>> Recall(3).score(y_true, y_pred) # doctest: +NORMALIZE_WHITESPACE
         array([0., 1.])
 
         """
@@ -436,7 +436,7 @@ class F1(Precision, Recall):
         >>> # use separate labels for each ranking
         >>> y_true = BinaryLabels.from_positive_indices([[0, 5],[1]])
         >>> y_pred = Rankings.from_ranked_indices([[3,2,1], [1,2]])
-        >>> F1(3).score(y_true, y_pred)  #doctest: +NORMALIZE_WHITESPACE
+        >>> F1(3).score(y_true, y_pred)  # doctest: +NORMALIZE_WHITESPACE
         array([0. , 0.5])
 
         """
@@ -527,7 +527,7 @@ class HitRate(Recall):
         >>> # use separate labels for each ranking
         >>> y_true = BinaryLabels.from_positive_indices([[0],[1]])
         >>> y_pred = Rankings.from_ranked_indices([[3,2,1], [1,2]])
-        >>> HitRate(3).score(y_true, y_pred) #doctest: +NORMALIZE_WHITESPACE
+        >>> HitRate(3).score(y_true, y_pred) # doctest: +NORMALIZE_WHITESPACE
         array([0., 1.])
 
         """
@@ -614,7 +614,7 @@ class ReciprocalRank(BinaryMetric):
         >>> # use separate labels for each ranking
         >>> y_true = BinaryLabels.from_positive_indices([[0, 5],[1]])
         >>> y_pred = Rankings.from_ranked_indices([[3,0,1], [1,2]])
-        >>> ReciprocalRank(3).score(y_true, y_pred) #doctest: +NORMALIZE_WHITESPACE
+        >>> ReciprocalRank(3).score(y_true, y_pred) # doctest: +NORMALIZE_WHITESPACE
         array([0.5, 1. ])
 
         """
@@ -685,7 +685,7 @@ class MeanRanks(BinaryMetric):
         >>> # use separate labels for each ranking
         >>> y_true = BinaryLabels.from_positive_indices([[0, 5],[1]])
         >>> y_pred = Rankings.from_ranked_indices([[3,0,5], [1,2]])
-        >>> MeanRanks().score(y_true, y_pred) #doctest: +NORMALIZE_WHITESPACE
+        >>> MeanRanks().score(y_true, y_pred) # doctest: +NORMALIZE_WHITESPACE
         array([2.5, 1. ])
 
         """
@@ -784,7 +784,7 @@ class AP(BinaryMetric):
         >>> # use separate labels for each ranking
         >>> y_true = BinaryLabels.from_positive_indices([[0, 5],[1,2,3]])
         >>> y_pred = Rankings.from_ranked_indices([[3,2,1], [1,2]])
-        >>> AP(3).score(y_true, y_pred) #doctest: +NORMALIZE_WHITESPACE
+        >>> AP(3).score(y_true, y_pred) # doctest: +NORMALIZE_WHITESPACE
         array([0. , 0.66666667])
 
         """
@@ -911,7 +911,7 @@ class DCG(Metric):
         >>> # use separate labels for each ranking
         >>> y_true = NumericLabels.from_dense([[1, 2, 3], [4, 5]])
         >>> y_pred = Rankings.from_ranked_indices([[0,2,1], [1,0]])
-        >>> DCG(3).score(y_true, y_pred) #doctest: +NORMALIZE_WHITESPACE
+        >>> DCG(3).score(y_true, y_pred) # doctest: +NORMALIZE_WHITESPACE
         array([ 5.61610776, 10.85443211])
 
         """
@@ -991,7 +991,7 @@ class NDCG(DCG):
         >>> # use separate labels for each ranking
         >>> y_true = NumericLabels.from_dense([[1, 2, 3], [4, 5]])
         >>> y_pred = Rankings.from_ranked_indices([[0,2,1], [1,0]])
-        >>> NDCG(3).score(y_true, y_pred) #doctest: +NORMALIZE_WHITESPACE
+        >>> NDCG(3).score(y_true, y_pred) # doctest: +NORMALIZE_WHITESPACE
         array([0.81749351, 1.        ])
 
         """

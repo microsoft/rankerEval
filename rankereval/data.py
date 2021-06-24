@@ -170,7 +170,7 @@ class BinaryLabels(Labels):
         --------
         >>> import scipy.sparse as sp
         >>> matrix = sp.coo_matrix([[0, 1], [1, 1]])
-        >>> BinaryLabels.from_sparse(matrix) #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> BinaryLabels.from_sparse(matrix) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <rankereval.data.BinaryLabels...>
         """
         if not SCIPY_INSTALLED:
@@ -199,7 +199,7 @@ class BinaryLabels(Labels):
 
         Examples
         --------
-        >>> BinaryLabels.from_positive_indices([[1,2], [2]]) #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> BinaryLabels.from_positive_indices([[1,2], [2]]) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <rankereval.data.BinaryLabels...>
         """
         return BinaryLabels()._from_indices(indices)
@@ -229,7 +229,7 @@ class BinaryLabels(Labels):
 
         Examples
         --------
-        >>> BinaryLabels.from_dense([[0, 1, 1], [0, 0, 1]]) #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> BinaryLabels.from_dense([[0, 1, 1], [0, 0, 1]]) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <rankereval.data.BinaryLabels...>
         """
 
@@ -269,7 +269,7 @@ class NumericLabels(BinaryLabels):
 
         Examples
         --------
-        >>> NumericLabels.from_dense([[0, 3, 4], [0, 2, 5]]) #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> NumericLabels.from_dense([[0, 3, 4], [0, 2, 5]]) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <rankereval.data.NumericLabels...>
         """
         labels = _parse_numpy(labels).astype(float)
@@ -321,7 +321,7 @@ class Rankings(object):
 
         Examples
         --------
-        >>> Rankings.from_ranked_indices([[5, 2], [4, 3, 1]]) #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> Rankings.from_ranked_indices([[5, 2], [4, 3, 1]]) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <rankereval.data.Rankings...>
         """
         indices = _convert_to_int(_parse_numpy(indices))
@@ -353,7 +353,7 @@ class Rankings(object):
 
         Examples
         --------
-        >>> Rankings.from_scores([[0.1, 0.5, 0.2], [0.4, 0.2, 0.5]]) #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> Rankings.from_scores([[0.1, 0.5, 0.2], [0.4, 0.2, 0.5]]) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <rankereval.data.Rankings...>
         """
         scores = _parse_numpy(raw_scores, allow_non_finite_numbers=True, allow_ma_array=allow_ma_array)
