@@ -1,6 +1,6 @@
 """rankerEval - A fast numpy-based implementation of ranking metrics for information retrieval and recommendation."""
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 __author__ = 'Tobias Schnabel <tobias.schnabel@microsoft.com>'
 __all__ = [
     'BinaryLabels',

@@ -11,6 +11,7 @@ y3 = []
 y4 = [1, 2, 3, 4, 5, 6]
 y5 = [3]
 y6 = [0, 1]
+y7 = [[]]
 
 r1 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 r2 = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
@@ -37,14 +38,6 @@ class TestBinaryMetricsInvalidInputs:
                 [[3], [4]]), Rankings.from_scores([[3]]))
 
     @pytest.mark.parametrize("cls", BINARY_METRICS)
-    def test_invalid_numeric_input(self, cls):
-        with pytest.raises(TypeError):
-            cls(3).score(
-                NumericLabels.from_dense(
-                    [[]]), Rankings.from_scores(
-                    [[]]))
-
-    @pytest.mark.parametrize("cls", BINARY_METRICS)
     def test_invalid_ranking(self, cls):
         with pytest.raises(TypeError):
             cls(3).score(BinaryLabels.from_positive_indices([[]]), None)
@@ -68,11 +61,23 @@ class TestBinaryMetricsInvalidInputs:
 
 
 class TestRecall:
+    @pytest.mark.parametrize("k,y_gold,y_pred,valid,expect", [
+        (3, y2, r1, None, [0.0]),
+        (10, y2, r1, [r for r in r1 if r not in [8]], [0.5]),
+        (10, y2, r2, None, [1.0])
+    ])
+    def test_masked_score(self, k, y_gold, y_pred, valid, expect):
+        y_gold = BinaryLabels.from_positive_indices(y_gold)
+        y_pred = Rankings.from_ranked_indices(y_pred, valid_items=valid)
+        pred = Recall(k).score(y_gold, y_pred).tolist()
+        assert pred == approx(expect, nan_ok=True)
+
     @pytest.mark.parametrize("k,y_gold,y_pred,expect", [
         (3, y2, r1, [0.0]),
         (10, y2, r1, [1.0]),
         (10, y2, r2, [1.0]),
         (10, y2, r3, [0.0]),
+        (3, y7, y7, [float('nan')]),
         (10, y3, r3, [
             float('nan')]),
         (10, y3, r2, [
@@ -267,6 +272,16 @@ class TestHitrate:
 
 
 class TestReciprocalRank:
+    @pytest.mark.parametrize("k,y_gold,y_pred,valid,expect", [
+        (10, y5, r1, [3, 4, 5, 6], [1.0]),
+        (10, y5, r1, [2, 3, 4, 5, 6], [0.5])
+    ])
+    def test_masked_score(self, k, y_gold, y_pred, valid, expect):
+        y_gold = BinaryLabels.from_positive_indices(y_gold)
+        y_pred = Rankings.from_ranked_indices(y_pred, valid_items=valid)
+        pred = ReciprocalRank(k).score(y_gold, y_pred).tolist()
+        assert pred == approx(expect, nan_ok=True)
+
     @pytest.mark.parametrize("k,y_gold,y_pred,expect", [
         (3, y5, r1, [0.0]),
         (3, y5, r2, [0.0]),

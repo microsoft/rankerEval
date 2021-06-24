@@ -56,6 +56,17 @@ class TestNumericLabelsDense:
         pred = NumericLabels.from_dense(input).to_list()
         assert pred == expected
 
+    @pytest.mark.parametrize("input,expected", [
+        ([[0, 5], [8, 9], []], [[0, 5], [8, 9], []]),
+        ([[4], [8, 9], []], [[4], [8, 9], []]),
+        ([[0, 5]], [[0, 5]]),
+        ([[0], [5]], [[0], [5]]),
+        ([[]], [[]])
+    ])
+    def test_np_io(self, input, expected):
+        pred = NumericLabels.from_dense([np.asarray(i) for i in input]).to_list()
+        assert pred == expected
+
     def test_counts(self):
         input = [[0, 5]]
         pred = NumericLabels.from_dense(input).get_n_positives(1).tolist()
@@ -68,6 +79,7 @@ class TestNumericLabelsDense:
 
     @pytest.mark.parametrize("invalid_value", [
         [[None]],
+        [[3], np.asarray([[0]])],
         [[float('nan')]],
         [["str"]],
         [[[0]]],
@@ -114,7 +126,6 @@ class TestBinaryLabelsIndicies:
         [[float('nan')]],
         [["str"]],
         [[[0]]],
-        [[0, 5, 5]],
         None
     ])
     def test_invalid(self, invalid_value):
@@ -131,18 +142,37 @@ class TestRankings:
         pred = Rankings.from_ranked_indices(input).to_list()
         assert pred == expected
 
+    @pytest.mark.parametrize("input,valid,expected", [
+        ([0, 1], [1], [[1]]),
+        ([[4, 1], [2, 3]], [[1, 4], [2]], [[4, 1], [2]])
+    ])
+    def test_indices_with_mask_io(self, input, valid, expected):
+        pred = Rankings.from_ranked_indices(input, valid_items=valid).to_list()
+        assert pred == expected
+
+    @pytest.mark.parametrize("input,valid", [
+        ([[4, 1], [2, 3]], [[0, 1]])
+    ])
+    def test_indices_with_invalid_mask(self, input, valid):
+        with pytest.raises(ValueError):
+            Rankings.from_ranked_indices(input, valid_items=valid).to_list()
+
+    def test_invalid_mask_input(self):
+        input = np.ma.masked_array([[0, 1, 2], [5, 4, 3]],
+                                   mask=[[True, False, False], [False, True, False]])
+        with pytest.raises(ValueError):
+            Rankings.from_scores(input).to_list()
+
     @pytest.mark.parametrize("input", [
         [0, float('nan')],
         [[2, None]]
     ])
-    def test_invalid_indices(self, input):
+    def test_invalid_items(self, input):
         with pytest.raises(ValueError):
             Rankings.from_ranked_indices(input).to_list()
 
     @pytest.mark.parametrize("input,expected,has_warning", [
         ([0, 1], [[1, 0]], False),
-        (np.ma.masked_array([[0, 1, 2], [5, 4, 3]], mask=[
-         [True, False, False], [False, True, False]]), [[2, 1], [0, 2]], False),
         (np.asarray([0, 1]), [[1, 0]], False),
         (np.asarray([[0, 1], [3, 2]]), [[1, 0], [0, 1]], False),
         ([[4, 1], [2, 5, 6], [3, float('nan'), 4, float('inf')]],
@@ -154,4 +184,12 @@ class TestRankings:
                 pred = Rankings.from_scores(input).to_list()
         else:
             pred = Rankings.from_scores(input).to_list()
+        assert pred == expected
+
+    @pytest.mark.parametrize("input,valid,expected", [
+        ([5, 0], [0], [[0]]),
+        ([[1, 4], [3, 2]], [[0, 1], [1]], [[1, 0], [1]])
+    ])
+    def test_scores_io_with_mask(self, input, valid, expected):
+        pred = Rankings.from_scores(input, valid_items=valid).to_list()
         assert pred == expected

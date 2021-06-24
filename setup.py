@@ -13,20 +13,20 @@ def read(filename):
 
 setup(
     name="rankerEval",
-    version="0.1.1",
+    version="0.1.2",
     url="https://github.com/microsoft/rankerEval",
     license='MIT',
 
     author="Tobias Schnabel",
     author_email="tobias.schnabel@microsoft.com",
 
-    description="A fast numpy-based implementation of ranking metrics for information retrieval and recommendation.",
+    description="A fast implementation of ranking metrics for information retrieval and recommendation.",
     keywords='ranking recommendation evaluation map mrr',
     long_description=read("README.rst"),
     long_description_content_type="text/x-rst",
     packages=find_packages(exclude=('tests', 'docs', 'test')),
 
-    install_requires=['numpy>=1.18'],
+    install_requires=['numpy>=1.18', 'numba>=0.50.0'],
     python_requires='>=3',
 
     classifiers=[

@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.ma as ma
 import warnings
+import numba
 
 try:
     import scipy.sparse as sp
@@ -17,10 +18,23 @@ def _pad_list(x, padding_val=-999):
     if not isinstance(x, list):
         raise TypeError("Expect list as argument")
 
-    if len(x) > 0 and not isinstance(x[0], list):
+    if len(x) == 0:
         x = [x]
-    elif len(x) == 0:
+    elif isinstance(x[0], (int, float)):
         x = [x]
+
+    converted = list()
+    for el in x:
+        if isinstance(el, list):
+            converted.append(el)
+        elif isinstance(el, np.ndarray) and el.ndim == 1:
+            converted.append(el.tolist())
+        elif isinstance(el, np.ndarray) and el.ndim == 0:
+            converted.append([el.tolist()])
+        else:
+            raise ValueError("Input contained invalid list element type; expect list or 1D np.array")
+    x = converted
+
     max_len = max(map(len, x))
     padded_list = np.array(
         [row + [padding_val] * (max_len - len(row)) for row in x])
@@ -29,14 +43,15 @@ def _pad_list(x, padding_val=-999):
     return padded_list, mask
 
 
-def _parse_numpy(y, allow_non_finite_numbers=False):
+def _parse_numpy(y, allow_non_finite_numbers=False, allow_ma_array=False):
     if isinstance(y, list):
         x, mask = _pad_list(y)
         y = ma.masked_array(x, mask=mask)
+    elif np.ma.isMaskedArray(y):
+        if not allow_ma_array:
+            raise ValueError("Masked arrays not supported. Use 'valid_items' to mask out entries.")
     elif isinstance(y, np.ndarray):
         y = ma.masked_array(y)
-    elif np.ma.isMaskedArray(y):
-        pass
     else:
         raise ValueError("Input arrays need to be either list or numpy array")
 
@@ -75,40 +90,64 @@ class Labels(object):
     pass
 
 
+@numba.njit
+def fast_lookup(A, B):
+    """
+    Numba accelerated version of lookup table
+    """
+    vals = np.zeros(B.shape, dtype=np.float32)
+    if len(A) == len(B):
+        for i in range(B.shape[0]):
+            for j in range(B.shape[1]):
+                if B[i, j] in A[i]:
+                    vals[i, j] = A[i][B[i, j]]
+    else:
+        for i in range(B.shape[0]):
+            for j in range(B.shape[1]):
+                if B[i, j] in A[0]:
+                    vals[i, j] = A[0][B[i, j]]
+    return vals
+
+
+@numba.njit
+def fast_length(A):
+    vals = np.zeros(len(A), dtype=np.float32)
+    for i in range(len(A)):
+        vals[i] = len(A[i])
+    return vals
+
+
 class BinaryLabels(Labels):
     """
     Represents binary ground truth data (e.g., 1 indicating relevance).
     """
 
     def _from_indices(self, labels):
-        self._labels = _convert_to_int(_parse_numpy(labels))
+        labels_raw = _convert_to_int(_parse_numpy(labels))
+        ltu = list()
+        for row in labels_raw:
+            d = numba.typed.Dict.empty(key_type=numba.types.int64, value_type=numba.types.float32)
+            for col in row[row >= 0]:
+                d[col] = numba.types.float32(1.0)
+            ltu.append(d)
+        self._labels = numba.typed.List(ltu)
         return self
 
-    def get_labels(self, indices):
-        m_labels = self._labels.shape[0]
-        m_indices = indices.shape[0]
+    def get_labels_for(self, ranking):
+        indices = ranking._indices
+        m_labels = len(self._labels)
+        m_indices = len(indices)
 
         if m_indices < m_labels:
             raise ValueError(
                 "Gold labels contain %d rows, but input rankings only have %d rows" %
                 (m_labels, m_indices))
-        elif m_indices == m_labels:
-            retrieved = np.array(
-                list(map(np.isin, indices.filled(0), self._labels))).astype(float)
         else:
-            retrieved = np.isin(indices.filled(0), self._labels)
+            retrieved = fast_lookup(self._labels, indices.filled(0))
         return ma.masked_array(retrieved, mask=indices.mask)
 
-    def _check_for_duplicates(self):
-        contains_duplicates = any(map(lambda x: np.unique(
-            x.compressed(), return_counts=True)[1].max(initial=0) > 1, self._labels))
-        if contains_duplicates:
-            raise ValueError("Indices must be unique per row.")
-        else:
-            return self
-
     def as_rankings(self):
-        return Rankings.from_ranked_indices(self._labels)
+        return Rankings.from_ranked_indices(self.to_list())
 
     @classmethod
     def from_sparse(cls, matrix):
@@ -163,11 +202,11 @@ class BinaryLabels(Labels):
         >>> BinaryLabels.from_positive_indices([[1,2], [2]]) #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <rankereval.data.BinaryLabels...>
         """
-        return BinaryLabels()._from_indices(indices)._check_for_duplicates()
+        return BinaryLabels()._from_indices(indices)
 
     def get_n_positives(self, n_rankings):
-        m_labels = self._labels.shape[0]
-        n_pos = np.sum(self._labels >= 0, axis=-1).filled(0)
+        m_labels = len(self._labels)
+        n_pos = fast_length(self._labels)
         if m_labels == 1:
             n_pos = np.tile(n_pos, n_rankings)
         return n_pos
@@ -181,7 +220,7 @@ class BinaryLabels(Labels):
         ----------
         labels : array_like, one row per context (e.g., user or query)
                 Contains binary labels for each item. Labels must either be in {-1, +1} or {0, 1}.
-                                Must be 1D or 2D, but row lengths can differ. Supports :class:`numpy.ma`.
+                                Must be 1D or 2D, but row lengths can differ.
 
         Raises
         ------
@@ -202,13 +241,13 @@ class BinaryLabels(Labels):
         return BinaryLabels()._from_indices(indices)
 
     def to_list(self):
-        return list(map(lambda x: x[x >= 0].tolist(), self._labels))
+        return list(map(lambda x: list(sorted(x.keys())), self._labels))
 
     def __str__(self):
         return str(self.to_list())
 
 
-class NumericLabels(Labels):
+class NumericLabels(BinaryLabels):
     """
     Represents numeric ground truth data (e.g., relevance labels from 1-5).
     """
@@ -222,7 +261,6 @@ class NumericLabels(Labels):
         ----------
         labels : array_like, one row per context (e.g., user or query)
                 Contains numeric labels for each item. Must be 1D or 2D, but row lengths can differ.
-                Supports :class:`numpy.ma`.
 
         Raises
         ------
@@ -238,45 +276,25 @@ class NumericLabels(Labels):
         return cls()._set_labels(labels)
 
     def _set_labels(self, labels):
-        self._labels = labels
+        self._labels_raw = labels
+        ltu = list()
+        for row in self._labels_raw:
+            d = numba.typed.Dict.empty(key_type=numba.types.int64, value_type=numba.types.float32)
+            for col in np.nonzero(~row.mask)[0]:
+                if row[col] > 0:
+                    d[col] = numba.types.float32(row[col])
+            ltu.append(d)
+        self._labels = numba.typed.List(ltu)
         return self
 
-    def get_n_positives(self, n_rankings):
-        m_labels = self._labels.shape[0]
-        n_pos = np.sum(self._labels > 0, axis=-1).filled(0)
-        if m_labels == 1:
-            n_pos = np.tile(n_pos, n_rankings)
-        return n_pos
-
     def as_rankings(self):
-        return Rankings.from_scores(self._labels)
-
-    def get_labels(self, indices):
-        m_labels = self._labels.shape[0]
-        n_cols_labels = self._labels.shape[1]
-        m_indices = indices.shape[0]
-
-        if m_indices < m_labels:
-            raise ValueError(
-                "Gold labels contain %d rows, but input rankings only have %d rows" %
-                (m_labels, m_indices))
-        elif n_cols_labels == 0:
-            return ma.masked_where(True, indices.filled(-1))
-        elif m_indices == m_labels:
-            retrieved = np.take_along_axis(
-                self._labels, indices.filled(-1), axis=-1)
-        else:
-            retrieved = self._labels[[[0]], indices.filled(-1)]
-        if np.any(retrieved.mask & ~indices.mask):
-            raise ValueError("Couldn't find indices in gold labels.")
-        retrieved.mask = indices.mask
-        return retrieved
+        return Rankings.from_scores(self._labels_raw, allow_ma_array=True)
 
     def to_list(self):
-        return list(map(lambda x: x.compressed().tolist(), self._labels))
+        return list(map(lambda x: x.compressed().tolist(), self._labels_raw))
 
     def __str__(self):
-        return str(self._labels)
+        return str(self._labels_raw)
 
 
 class Rankings(object):
@@ -285,19 +303,21 @@ class Rankings(object):
     """
 
     @classmethod
-    def from_ranked_indices(cls, indices):
+    def from_ranked_indices(cls, indices, valid_items=None):
         """
         Construct a rankings instance from data where item indices are specified in ranked order.
 
         Parameters
         ----------
         indices : array_like, one row per ranking
-                Specifies indices of items after ranking. Must be 1D or 2D, but row lengths can differ.
+                Indices of items after ranking. Must be 1D or 2D, but row lengths can differ.
+        valid_items : array_like, one row per ranking
+                Indices of valid items (e.g., candidate set). Invalid items will be discarded from ranking.
 
         Raises
         ------
         ValueError
-                if `indices` is of invalid shape, type or contains invalid indices.
+                if `indices` or `valid_items` of invalid shape or type.
 
         Examples
         --------
@@ -305,10 +325,11 @@ class Rankings(object):
         <rankereval.data.Rankings...>
         """
         indices = _convert_to_int(_parse_numpy(indices))
-        return cls()._set_indices(indices)
+
+        return cls()._set_indices(indices, valid_items)
 
     @classmethod
-    def from_scores(cls, raw_scores):
+    def from_scores(cls, raw_scores, valid_items=None, allow_ma_array=False):
         """
         Construct a rankings instance from raw scores where each item's score is specified.
         Items will be ranked in descending order (higher scores meaning better).
@@ -317,12 +338,13 @@ class Rankings(object):
         ----------
         raw_scores : array_like, one row per ranking
                 Contains raw scores for each item. Must be 1D or 2D, but row lengths can differ.
-                Supports :class:`numpy.ma`.
+        valid_items : array_like, one row per ranking
+                Indices of valid items (e.g., candidate set). Invalid items will be discarded from ranking.
 
         Raises
         ------
         ValueError
-                if `raw_scores` is of invalid shape or type.
+                if `raw_scores` or `valid_items` of invalid shape or type.
 
         Warns
         ------
@@ -334,7 +356,7 @@ class Rankings(object):
         >>> Rankings.from_scores([[0.1, 0.5, 0.2], [0.4, 0.2, 0.5]]) #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <rankereval.data.Rankings...>
         """
-        scores = _parse_numpy(raw_scores, allow_non_finite_numbers=True)
+        scores = _parse_numpy(raw_scores, allow_non_finite_numbers=True, allow_ma_array=allow_ma_array)
 
         sorted_indices = (-scores).argsort(axis=-1, kind="stable")
 
@@ -345,18 +367,28 @@ class Rankings(object):
 
         indices = ma.masked_array(sorted_indices, mask=mask)
 
-        return cls()._set_indices(indices)
+        return cls()._set_indices(indices, valid_items)
 
-    def _set_indices(self, indices):
+    def _set_indices(self, indices, valid_items):
+        if valid_items is not None:
+            valid_items = _convert_to_int(_parse_numpy(valid_items))
+            if valid_items.shape[0] != indices.shape[0]:
+                raise ValueError("Valid indices need have the same number of rows as raw_scores.")
+
+            # Mask out all entries unless explicitly specified
+            mask = np.full(indices.shape, True, dtype=bool)
+            for i, valid_in_row in enumerate(valid_items):
+                mask[i] = ~np.isin(indices[i].filled(-1), valid_in_row.compressed())
+
+            indices.mask = mask
         self._indices = indices
-        self._n_nonzeros = indices.count(axis=-1)
+        self._indices = _convert_to_int(_parse_numpy(self.to_list()))
+        self._n_nonzeros = self._indices.count(axis=-1)
+        print(self._n_nonzeros)
         return self
 
     def __str__(self):
         return str(self._indices)
-
-    def get_gold_labels(self, y_true):
-        return y_true.get_labels(self._indices)
 
     def to_list(self):
         return list(map(lambda x: x.compressed().tolist(), self._indices))

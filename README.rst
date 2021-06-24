@@ -11,7 +11,7 @@ RankerEval
 
 .. inclusion-marker-start
 
-A fast numpy-based implementation of ranking metrics for information retrieval and recommendation.
+A fast numpy/numba-based implementation of ranking metrics for information retrieval and recommendation.
 Coded with efficiency in mind and support for edge cases. 
 
 Find the full `documentation here <https://rankereval.readthedocs.io>`_.

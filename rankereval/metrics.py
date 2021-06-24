@@ -31,7 +31,7 @@ class Metric(object):
         if not isinstance(y_pred, Rankings):
             raise TypeError("y_pred must be of type Rankings")
 
-        y_pred_labels = y_pred.get_gold_labels(y_true)
+        y_pred_labels = y_true.get_labels_for(y_pred)
 
         return self._score(y_true, y_pred_labels)
 
@@ -925,7 +925,7 @@ class NDCG(DCG):
 
     def _score(self, y_true, y_pred_labels):
         dcg = self._dcg(y_true, y_pred_labels)
-        ideal_labels = y_true.as_rankings().get_gold_labels(y_true)
+        ideal_labels = y_true.get_labels_for(y_true.as_rankings())
         idcg = self._dcg(y_true, ideal_labels)
 
         return dcg / idcg
