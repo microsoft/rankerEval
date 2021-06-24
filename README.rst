@@ -22,9 +22,9 @@ Features
 
   * Binary labels: Recall, Precision, MAP, HitRate, MRR, MeanRanks, F1
   * Numeric and binary labels: DCG, nDCG
-* Flexible input formats: Supports masked arrays and sparse matrices 
+* Minimal dependencies: Numpy and Numba (required), SciPy (optional)
+* Flexible input formats: Supports arrays, lists and sparse matrices 
 * Built-in support for confidence intervals via bootstrapping
-* Minimal dependencies: Numpy (required), SciPy (optional)
   
 Usage
 -----
