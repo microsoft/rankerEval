@@ -20,7 +20,7 @@ print(os.path.abspath('../..'))
 # -- Project information -----------------------------------------------------
 
 project = 'RankerEval'
-copyright = '2020, Tobias Schnabel'
+copyright = '2021, Tobias Schnabel'
 author = 'Tobias Schnabel'
 
 # The full version, including alpha/beta/rc tags
@@ -59,6 +59,7 @@ copybutton_prompt_text = ">>> "
 pygments_style = 'sphinx'
 html_theme = 'sphinx_rtd_theme'
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+trim_doctest_flags = True
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
