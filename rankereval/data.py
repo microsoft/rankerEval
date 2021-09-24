@@ -5,6 +5,7 @@ import numba
 
 try:
     import scipy.sparse as sp
+
     SCIPY_INSTALLED = True
 except ImportError:
     SCIPY_INSTALLED = False
@@ -32,14 +33,14 @@ def _pad_list(x, padding_val=-999):
         elif isinstance(el, np.ndarray) and el.ndim == 0:
             converted.append([el.tolist()])
         else:
-            raise ValueError("Input contained invalid list element type; expect list or 1D np.array")
+            raise ValueError(
+                "Input contained invalid list element type; expect list or 1D np.array"
+            )
     x = converted
 
     max_len = max(map(len, x))
-    padded_list = np.array(
-        [row + [padding_val] * (max_len - len(row)) for row in x])
-    mask = np.array([[False] * len(row) + [True] *
-                     (max_len - len(row)) for row in x])
+    padded_list = np.array([row + [padding_val] * (max_len - len(row)) for row in x])
+    mask = np.array([[False] * len(row) + [True] * (max_len - len(row)) for row in x])
     return padded_list, mask
 
 
@@ -49,14 +50,15 @@ def _parse_numpy(y, allow_non_finite_numbers=False, allow_ma_array=False):
         y = ma.masked_array(x, mask=mask)
     elif np.ma.isMaskedArray(y):
         if not allow_ma_array:
-            raise ValueError("Masked arrays not supported. Use 'valid_items' to mask out entries.")
+            raise ValueError(
+                "Masked arrays not supported. Use 'valid_items' to mask out entries."
+            )
     elif isinstance(y, np.ndarray):
         y = ma.masked_array(y)
     else:
         raise ValueError("Input arrays need to be either list or numpy array")
 
-    if not np.issubdtype(y.dtype, np.number) or np.issubdtype(
-            np.dtype, np.bool_):
+    if not np.issubdtype(y.dtype, np.number) or np.issubdtype(np.dtype, np.bool_):
         raise ValueError("Input must be numeric")
 
     y = np.atleast_2d(y)
@@ -66,7 +68,8 @@ def _parse_numpy(y, allow_non_finite_numbers=False, allow_ma_array=False):
         if allow_non_finite_numbers:
             warnings.warn(
                 "Input contains NaN or Inf entries which will be ignored.",
-                InvalidValuesWarning)
+                InvalidValuesWarning,
+            )
             y.mask = y.mask | nonfinite_entries
         else:
             raise ValueError("Input contains NaN or Inf entries")
@@ -87,6 +90,7 @@ class Labels(object):
     """
     Abstract class for ground truth labels.
     """
+
     pass
 
 
@@ -126,7 +130,9 @@ class BinaryLabels(Labels):
         labels_raw = _convert_to_int(_parse_numpy(labels))
         ltu = list()
         for row in labels_raw:
-            d = numba.typed.Dict.empty(key_type=numba.types.int64, value_type=numba.types.float32)
+            d = numba.typed.Dict.empty(
+                key_type=numba.types.int64, value_type=numba.types.float32
+            )
             for col in row[row >= 0]:
                 d[col] = numba.types.float32(1.0)
             ltu.append(d)
@@ -140,8 +146,9 @@ class BinaryLabels(Labels):
 
         if m_indices < m_labels:
             raise ValueError(
-                "Gold labels contain %d rows, but input rankings only have %d rows" %
-                (m_labels, m_indices))
+                "Gold labels contain %d rows, but input rankings only have %d rows"
+                % (m_labels, m_indices)
+            )
         else:
             retrieved = fast_lookup(self._labels, indices.filled(0))
         return ma.masked_array(retrieved, mask=indices.mask)
@@ -235,7 +242,8 @@ class BinaryLabels(Labels):
 
         labels = _parse_numpy(labels)
         if len(np.setdiff1d(np.unique(labels).compressed(), [0, 1])) and len(
-                np.setdiff1d(np.unique(labels).compressed(), [-1, 1])):
+            np.setdiff1d(np.unique(labels).compressed(), [-1, 1])
+        ):
             raise ValueError("Labels need to be binary.")
         indices = list(map(lambda x: np.nonzero(x > 0)[0].tolist(), labels))
         return BinaryLabels()._from_indices(indices)
@@ -279,7 +287,9 @@ class NumericLabels(BinaryLabels):
         self._labels_raw = labels
         ltu = list()
         for row in self._labels_raw:
-            d = numba.typed.Dict.empty(key_type=numba.types.int64, value_type=numba.types.float32)
+            d = numba.typed.Dict.empty(
+                key_type=numba.types.int64, value_type=numba.types.float32
+            )
             for col in np.nonzero(~row.mask)[0]:
                 if row[col] > 0:
                     d[col] = numba.types.float32(row[col])
@@ -356,7 +366,9 @@ class Rankings(object):
         >>> Rankings.from_scores([[0.1, 0.5, 0.2], [0.4, 0.2, 0.5]]) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <rankereval.data.Rankings...>
         """
-        scores = _parse_numpy(raw_scores, allow_non_finite_numbers=True, allow_ma_array=allow_ma_array)
+        scores = _parse_numpy(
+            raw_scores, allow_non_finite_numbers=True, allow_ma_array=allow_ma_array
+        )
 
         sorted_indices = (-scores).argsort(axis=-1, kind="stable")
 
@@ -373,7 +385,9 @@ class Rankings(object):
         if valid_items is not None:
             valid_items = _convert_to_int(_parse_numpy(valid_items))
             if valid_items.shape[0] != indices.shape[0]:
-                raise ValueError("Valid indices need have the same number of rows as raw_scores.")
+                raise ValueError(
+                    "Valid indices need have the same number of rows as raw_scores."
+                )
 
             # Mask out all entries unless explicitly specified
             mask = np.full(indices.shape, True, dtype=bool)
@@ -384,7 +398,6 @@ class Rankings(object):
         self._indices = indices
         self._indices = _convert_to_int(_parse_numpy(self.to_list()))
         self._n_nonzeros = self._indices.count(axis=-1)
-        print(self._n_nonzeros)
         return self
 
     def __str__(self):

@@ -37,15 +37,17 @@ class Metric(object):
 
     @classmethod
     def _bootstrap_ci(cls, scores, n_bootstrap_samples, confidence):
-        if not isinstance(n_bootstrap_samples,
-                          int) or n_bootstrap_samples <= 1:
+        if not isinstance(n_bootstrap_samples, int) or n_bootstrap_samples <= 1:
             raise ValueError("n_bootstrap_samples must be int > 1")
-        elif not isinstance(confidence, float) or confidence <= 0.0 or confidence >= 1.0:
+        elif (
+            not isinstance(confidence, float) or confidence <= 0.0 or confidence >= 1.0
+        ):
             raise ValueError("Confidence must be float and 0 < confidence < 1")
 
         if len(scores):
             resamples = np.random.choice(
-                scores, (len(scores), n_bootstrap_samples), replace=True)
+                scores, (len(scores), n_bootstrap_samples), replace=True
+            )
             bootstrap_means = resamples.mean(axis=0)
 
             # Compute "percentile bootstrap"
@@ -54,10 +56,17 @@ class Metric(object):
             upper_ci = np.quantile(bootstrap_means, 1.0 - alpha_2)
             return (lower_ci, upper_ci)
         else:
-            return (float('nan'), float('nan'))
+            return (float("nan"), float("nan"))
 
-    def mean(self, y_true, y_pred, nan_handling='drop',
-             conf_interval=False, n_bootstrap_samples=1000, confidence=0.95):
+    def mean(
+        self,
+        y_true,
+        y_pred,
+        nan_handling="drop",
+        conf_interval=False,
+        n_bootstrap_samples=1000,
+        confidence=0.95,
+    ):
         r"""
         Mean score over all ranking after handling NaN values.
 
@@ -98,16 +107,15 @@ class Metric(object):
         """
 
         scores = self.score(y_true, y_pred)
-        if nan_handling == 'drop':
+        if nan_handling == "drop":
             scores = scores[~np.isnan(scores)]
-        elif nan_handling == 'zerofill':
+        elif nan_handling == "zerofill":
             scores = np.nan_to_num(scores)
         elif nan_handling == "propagate":
             if np.isnan(scores).sum():
                 scores = []
         else:
-            raise ValueError(
-                'nan_handling must be "propagate", "drop" or "zerofill"')
+            raise ValueError('nan_handling must be "propagate", "drop" or "zerofill"')
 
         if conf_interval:
             ci = self._bootstrap_ci(scores, n_bootstrap_samples, confidence)
@@ -117,7 +125,7 @@ class Metric(object):
         if len(scores):
             mean = scores.mean()
         else:
-            mean = float('nan')
+            mean = float("nan")
 
         return {"score": mean, "conf_interval": ci}
 
@@ -139,20 +147,20 @@ class BinaryMetric(Metric):
 
 class Precision(BinaryMetric):
     """
-            Parameters
-            ----------
-            k : int
-                    specifies number of top results `k` of each ranking to be evaluated.
+    Parameters
+    ----------
+    k : int
+            specifies number of top results `k` of each ranking to be evaluated.
 
-            Raises
-            ------
-            ValueError
-                    if `k` is not integer > 0.
+    Raises
+    ------
+    ValueError
+            if `k` is not integer > 0.
     """
 
     def _precision(self, y_true, y_pred_labels):
         n_pos = y_true.get_n_positives(y_pred_labels.shape[0])
-        n_relevant = np.sum(y_pred_labels[:, :self._k] == 1, axis=-1).filled(0)
+        n_relevant = np.sum(y_pred_labels[:, : self._k] == 1, axis=-1).filled(0)
 
         scores = n_relevant.astype(float) / self._k
         # not defined if there are no relevant labels
@@ -219,19 +227,19 @@ class Precision(BinaryMetric):
 
 class TruncatedPrecision(BinaryMetric):
     """
-            Parameters
-            ----------
-            k : int
-                    specifies number of top results `k` of each ranking to be evaluated.
+    Parameters
+    ----------
+    k : int
+            specifies number of top results `k` of each ranking to be evaluated.
 
-            Raises
-            ------
-            ValueError
-                    if `k` is not integer > 0.
+    Raises
+    ------
+    ValueError
+            if `k` is not integer > 0.
     """
 
     def _precision(self, y_true, y_pred_labels):
-        n_relevant = np.sum(y_pred_labels[:, :self._k] == 1, axis=-1).filled(0)
+        n_relevant = np.sum(y_pred_labels[:, : self._k] == 1, axis=-1).filled(0)
         n_pos = y_true.get_n_positives(y_pred_labels.shape[0])
 
         items = np.broadcast_to(~y_pred_labels.mask, y_pred_labels.shape)
@@ -241,7 +249,9 @@ class TruncatedPrecision(BinaryMetric):
         scores = np.NaN * np.zeros_like(n_relevant, dtype=float)
         valid = (n_items_in_y_pred > 0) & (n_pos > 0)
 
-        scores[valid] = n_relevant[valid].astype(float) / np.minimum(n_items_in_y_pred[valid], self._k)
+        scores[valid] = n_relevant[valid].astype(float) / np.minimum(
+            n_items_in_y_pred[valid], self._k
+        )
         return scores
 
     def _score(self, y_true, y_pred_labels):
@@ -305,24 +315,23 @@ class TruncatedPrecision(BinaryMetric):
 
 class Recall(BinaryMetric):
     """
-            Parameters
-            ----------
-            k : int
-                    specifies number of top results `k` of each ranking to be evaluated.
+    Parameters
+    ----------
+    k : int
+            specifies number of top results `k` of each ranking to be evaluated.
 
-            Raises
-            ------
-            ValueError
-                    if `k` is not integer > 0.
+    Raises
+    ------
+    ValueError
+            if `k` is not integer > 0.
     """
 
     def _recall(self, y_true, y_pred_labels):
         n_pos = y_true.get_n_positives(y_pred_labels.shape[0])
-        n_relevant = np.sum(y_pred_labels[:, :self._k] == 1, axis=-1).filled(0)
+        n_relevant = np.sum(y_pred_labels[:, : self._k] == 1, axis=-1).filled(0)
 
         scores = np.NaN * np.zeros_like(n_relevant, dtype=float)
-        scores[n_pos > 0] = n_relevant[n_pos > 0].astype(
-            float) / n_pos[n_pos > 0]
+        scores[n_pos > 0] = n_relevant[n_pos > 0].astype(float) / n_pos[n_pos > 0]
         return scores
 
     def _score(self, y_true, y_pred_labels):
@@ -462,15 +471,15 @@ class F1(Precision, Recall):
 
 class HitRate(Recall):
     """
-            Parameters
-            ----------
-            k : int
-                    specifies number of top results `k` of each ranking to be evaluated.
+    Parameters
+    ----------
+    k : int
+            specifies number of top results `k` of each ranking to be evaluated.
 
-            Raises
-            ------
-            ValueError
-                    if `k` is not integer > 0.
+    Raises
+    ------
+    ValueError
+            if `k` is not integer > 0.
     """
 
     def score(self, y_true, y_pred):
@@ -542,20 +551,20 @@ class HitRate(Recall):
 
 class ReciprocalRank(BinaryMetric):
     """
-            Parameters
-            ----------
-            k : int
-                    specifies number of top results `k` of each ranking to be evaluated.
+    Parameters
+    ----------
+    k : int
+            specifies number of top results `k` of each ranking to be evaluated.
 
-            Raises
-            ------
-            ValueError
-                    if `k` is not integer > 0.
+    Raises
+    ------
+    ValueError
+            if `k` is not integer > 0.
     """
 
     def _score(self, y_true, y_pred_labels):
         n_pos = y_true.get_n_positives(y_pred_labels.shape[0])
-        labels = y_pred_labels[:, :self._k].filled(0)
+        labels = y_pred_labels[:, : self._k].filled(0)
         ranks = np.arange(1, labels.shape[1] + 1, dtype=float).reshape(1, -1)
 
         # It is 1/rank if document appears in top k, 0 otherwise
@@ -623,8 +632,8 @@ class ReciprocalRank(BinaryMetric):
 
 class MeanRanks(BinaryMetric):
     """
-            Used for evaluating permutations of `y_true`. Does not accept *k* as it
-            scores permutations.
+    Used for evaluating permutations of `y_true`. Does not accept *k* as it
+    scores permutations.
     """
 
     def __init__(self):
@@ -694,27 +703,29 @@ class MeanRanks(BinaryMetric):
 
 class AP(BinaryMetric):
     """
-            Parameters
-            ----------
-            k : int
-                    specifies number of top results `k` of each ranking to be evaluated.
+    Parameters
+    ----------
+    k : int
+            specifies number of top results `k` of each ranking to be evaluated.
 
-            Raises
-            ------
-            ValueError
-                    if `k` is not integer > 0.
+    Raises
+    ------
+    ValueError
+            if `k` is not integer > 0.
     """
 
     def _score(self, y_true, y_pred_labels):
         n_pos = y_true.get_n_positives(y_pred_labels.shape[0])
-        labels = y_pred_labels[:, :self._k].filled(0)
+        labels = y_pred_labels[:, : self._k].filled(0)
         ranks = np.arange(1, labels.shape[1] + 1, dtype=float).reshape(1, -1)
 
         precision = np.cumsum(labels, axis=-1) / ranks
 
         scores = np.zeros_like(n_pos, dtype=float)
-        scores[n_pos > 0] = np.sum(
-            precision * labels, axis=-1) / np.clip(n_pos[n_pos > 0], None, self._k)
+
+        scores[n_pos > 0] = np.sum(precision * labels, axis=-1) / np.clip(
+            n_pos[n_pos > 0], None, self._k
+        )
         scores[n_pos == 0] = np.NaN
 
         return scores
@@ -793,48 +804,46 @@ class AP(BinaryMetric):
 
 class DCG(Metric):
     r"""
-            Parameters
-            ----------
-            k : int
-                    specifies number of top results `k` of each ranking to be evaluated.
+    Parameters
+    ----------
+    k : int
+            specifies number of top results `k` of each ranking to be evaluated.
 
-            relevance_scaling : str, ['binary' (default), 'power']
-                    Determines are relevance labels are transformed:
+    relevance_scaling : str, ['binary' (default), 'power']
+            Determines are relevance labels are transformed:
 
-                    `'identity'`: (default)
-                            :math:`f(\mathrm{rel}(y_i)) = \mathrm{rel}(y_i)`
-                    `'power'`:
-                            :math:`f(\mathrm{rel}(y_i)) = 2^{\mathrm{rel}(y_i)} - 1`
+            `'identity'`: (default)
+                    :math:`f(\mathrm{rel}(y_i)) = \mathrm{rel}(y_i)`
+            `'power'`:
+                    :math:`f(\mathrm{rel}(y_i)) = 2^{\mathrm{rel}(y_i)} - 1`
 
-            log_base : str, ['e' (default), '2']
-                    Determines what log base is used in denominator.
-                    The smaller this value, the heavier emphasis on top-ranked documents.
+    log_base : str, ['e' (default), '2']
+            Determines what log base is used in denominator.
+            The smaller this value, the heavier emphasis on top-ranked documents.
 
-                    `'e'` (default):
-                            Natural logarithm :math:`\ln`
-                    `'2'`:
-                            :math:`\log_2`
+            `'e'` (default):
+                    Natural logarithm :math:`\ln`
+            `'2'`:
+                    :math:`\log_2`
 
-            Notes
-            -----
-            The original definition of (n)DCG [KJ]_ uses 'identity' for `relevance_scaling`,
-            but leaves the choice of `log_base` open.
+    Notes
+    -----
+    The original definition of (n)DCG [KJ]_ uses 'identity' for `relevance_scaling`,
+    but leaves the choice of `log_base` open.
 
-            Raises
-            ------
-            ValueError
-                    if `k` is not integer > 0 or `relevance_scaling` or `log_base` are invalid.
+    Raises
+    ------
+    ValueError
+            if `k` is not integer > 0 or `relevance_scaling` or `log_base` are invalid.
 
     """
-    SCALERS = {'identity': lambda x: x,
-               'power': lambda x: np.power(x, 2) - 1}
-    LOGS = {'2': lambda x: np.log2(x), 'e': lambda x: np.log(x)}
+    SCALERS = {"identity": lambda x: x, "power": lambda x: np.power(x, 2) - 1}
+    LOGS = {"2": lambda x: np.log2(x), "e": lambda x: np.log(x)}
 
-    def __init__(self, k=None, relevance_scaling='identity', log_base='e'):
+    def __init__(self, k=None, relevance_scaling="identity", log_base="e"):
         self._k = k
         if relevance_scaling not in self.SCALERS:
-            raise ValueError(
-                "Relevance scaling must be 'identity' or 'power'.")
+            raise ValueError("Relevance scaling must be 'identity' or 'power'.")
         if log_base not in self.LOGS:
             raise ValueError("Log base needs to be 'e' or '2'.")
         self._rel_scale = self.SCALERS[relevance_scaling]
@@ -842,16 +851,10 @@ class DCG(Metric):
 
     def _dcg(self, y_true, y_pred_labels):
         n_pos = y_true.get_n_positives(y_pred_labels.shape[0])
-        labels = y_pred_labels[:, :self._k].filled(0)
+        labels = y_pred_labels[:, : self._k].filled(0)
         ranks = np.arange(1, labels.shape[1] + 1, dtype=float).reshape(1, -1)
 
-        scores = np.sum(
-            self._rel_scale(labels) /
-            self._log_fct(
-                ranks +
-                1),
-            axis=-
-            1)
+        scores = np.sum(self._rel_scale(labels) / self._log_fct(ranks + 1), axis=-1)
         scores[n_pos == 0] = np.NaN
         return scores
 
