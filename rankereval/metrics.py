@@ -723,7 +723,7 @@ class AP(BinaryMetric):
 
         scores = np.zeros_like(n_pos, dtype=float)
 
-        scores[n_pos > 0] = np.sum(precision * labels, axis=-1) / np.clip(
+        scores[n_pos > 0] = np.sum(precision * labels, axis=-1)[n_pos > 0] / np.clip(
             n_pos[n_pos > 0], None, self._k
         )
         scores[n_pos == 0] = np.NaN
