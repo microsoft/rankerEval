@@ -78,6 +78,11 @@ MeanRanks
 .. autoclass:: rankereval.metrics.MeanRanks
    :members:
 
+FirstRelevantRank
+-----------------
+.. autoclass:: rankereval.metrics.FirstRelevantRank
+   :members:
+   
 DCG@k
 -----
 .. autoclass:: rankereval.metrics.DCG

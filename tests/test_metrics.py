@@ -1,5 +1,5 @@
 from rankereval import BinaryLabels, NumericLabels, Rankings
-from rankereval import Precision, TruncatedPrecision, Recall, F1, HitRate, AP, ReciprocalRank, DCG, NDCG, MeanRanks
+from rankereval import Precision, Recall, F1, HitRate, AP, ReciprocalRank, DCG, NDCG, MeanRanks, FirstRelevantRank
 
 import pytest
 from pytest import approx
@@ -91,7 +91,11 @@ class TestRecall:
     ])
     def test_score(self, k, y_gold, y_pred, expect):
         y_gold = BinaryLabels.from_positive_indices(y_gold)
-        y_pred = Rankings.from_ranked_indices(y_pred)
+        if len(y_pred) == 0 or [] in y_pred:
+            with pytest.warns(UserWarning):
+                y_pred = Rankings.from_ranked_indices(y_pred)
+        else:
+            y_pred = Rankings.from_ranked_indices(y_pred)
         pred = Recall(k).score(y_gold, y_pred).tolist()
         assert pred == approx(expect, nan_ok=True)
 
@@ -110,13 +114,20 @@ class TestMean:
          y3], [r3], (float('nan'), (float('nan'), float('nan'))))
     ])
     def test_mean(self, params, y_gold, y_pred, expect):
-        y_gold = BinaryLabels.from_positive_indices(y_gold)
-        y_pred = Rankings.from_ranked_indices(y_pred)
-        pred = Recall(10).mean(y_gold, y_pred, **params)
-        assert pred["score"] == approx(expect[0], nan_ok=True)
-        if expect[1] is None:
-            assert pred["conf_interval"] == expect[1]
+        if len(y_pred) == 0 or [] in y_pred:
+            with pytest.warns(UserWarning):
+                y_pred = Rankings.from_ranked_indices(y_pred)
         else:
+            y_pred = Rankings.from_ranked_indices(y_pred)
+
+        y_gold = BinaryLabels.from_positive_indices(y_gold)
+
+        pred = Recall(10).mean(y_gold, y_pred, **params)
+
+        if expect[1] is None:
+            assert pred == approx(expect[0], nan_ok=True)
+        else:
+            assert pred["score"] == approx(expect[0], nan_ok=True)
             assert pred["conf_interval"] == approx(expect[1], nan_ok=True)
 
     @pytest.mark.parametrize("scores,n_bootstrap_samples,confidence,expect", [
@@ -170,7 +181,11 @@ class TestPrecision:
     ])
     def test_score(self, k, y_gold, y_pred, expect):
         y_gold = BinaryLabels.from_positive_indices(y_gold)
-        y_pred = Rankings.from_ranked_indices(y_pred)
+        if len(y_pred) == 0 or [] in y_pred:
+            with pytest.warns(UserWarning):
+                y_pred = Rankings.from_ranked_indices(y_pred)
+        else:
+            y_pred = Rankings.from_ranked_indices(y_pred)
         pred = Precision(k).score(y_gold, y_pred).tolist()
         assert pred == approx(expect, nan_ok=True)
 
@@ -196,8 +211,12 @@ class TestTruncatedPrecision:
     ])
     def test_score(self, k, y_gold, y_pred, expect):
         y_gold = BinaryLabels.from_positive_indices(y_gold)
-        y_pred = Rankings.from_ranked_indices(y_pred)
-        pred = TruncatedPrecision(k).score(y_gold, y_pred).tolist()
+        if len(y_pred) == 0 or [] in y_pred:
+            with pytest.warns(UserWarning):
+                y_pred = Rankings.from_ranked_indices(y_pred)
+        else:
+            y_pred = Rankings.from_ranked_indices(y_pred)
+        pred = Precision(k, truncated=True).score(y_gold, y_pred).tolist()
         assert pred == approx(expect, nan_ok=True)
 
 
@@ -217,7 +236,11 @@ class TestF1:
     ])
     def test_score(self, k, y_gold, y_pred, expect):
         y_gold = BinaryLabels.from_positive_indices(y_gold)
-        y_pred = Rankings.from_ranked_indices(y_pred)
+        if len(y_pred) == 0 or [] in y_pred:
+            with pytest.warns(UserWarning):
+                y_pred = Rankings.from_ranked_indices(y_pred)
+        else:
+            y_pred = Rankings.from_ranked_indices(y_pred)
         pred = F1(k).score(y_gold, y_pred).tolist()
         assert pred == approx(expect, nan_ok=True)
 
@@ -235,11 +258,17 @@ class TestAP:
         (10, y3, r2, [
             float('nan')]),
         (6, y1, [r1, r2], [1.333333333 / 2, 0.2 / 2]),
+        (6, y1, [r1, r4, r1], [1.333333333 / 2, 0.0, 1.333333333 / 2]),
+        (6, [y2, y3], [r2, r4], [1.0, float('nan')]),
         (6, [y5, y1], [r1, r2], [0.25, 0.2 / 2])
     ])
     def test_score(self, k, y_gold, y_pred, expect):
         y_gold = BinaryLabels.from_positive_indices(y_gold)
-        y_pred = Rankings.from_ranked_indices(y_pred)
+        if len(y_pred) == 0 or [] in y_pred:
+            with pytest.warns(UserWarning):
+                y_pred = Rankings.from_ranked_indices(y_pred)
+        else:
+            y_pred = Rankings.from_ranked_indices(y_pred)
         pred = AP(k).score(y_gold, y_pred).tolist()
         assert pred == approx(expect, nan_ok=True)
 
@@ -266,7 +295,11 @@ class TestHitrate:
     ])
     def test_score(self, k, y_gold, y_pred, expect):
         y_gold = BinaryLabels.from_positive_indices(y_gold)
-        y_pred = Rankings.from_ranked_indices(y_pred)
+        if len(y_pred) == 0 or [] in y_pred:
+            with pytest.warns(UserWarning):
+                y_pred = Rankings.from_ranked_indices(y_pred)
+        else:
+            y_pred = Rankings.from_ranked_indices(y_pred)
         pred = HitRate(k).score(y_gold, y_pred).tolist()
         assert pred == approx(expect, nan_ok=True)
 
@@ -299,7 +332,11 @@ class TestReciprocalRank:
     ])
     def test_score(self, k, y_gold, y_pred, expect):
         y_gold = BinaryLabels.from_positive_indices(y_gold)
-        y_pred = Rankings.from_ranked_indices(y_pred)
+        if len(y_pred) == 0 or [] in y_pred:
+            with pytest.warns(UserWarning):
+                y_pred = Rankings.from_ranked_indices(y_pred)
+        else:
+            y_pred = Rankings.from_ranked_indices(y_pred)
         pred = ReciprocalRank(k).score(y_gold, y_pred).tolist()
         assert pred == approx(expect, nan_ok=True)
 
@@ -314,8 +351,31 @@ class TestMeanRanks:
     ])
     def test_score(self, y_gold, y_pred, expect):
         y_gold = BinaryLabels.from_positive_indices(y_gold)
-        y_pred = Rankings.from_ranked_indices(y_pred)
+        if len(y_pred) == 0 or [] in y_pred:
+            with pytest.warns(UserWarning):
+                y_pred = Rankings.from_ranked_indices(y_pred)
+        else:
+            y_pred = Rankings.from_ranked_indices(y_pred)
         pred = MeanRanks().score(y_gold, y_pred).tolist()
+        assert pred == approx(expect, nan_ok=True)
+
+
+class TestFirstRelevantRank:
+    @pytest.mark.parametrize("y_gold,y_pred,expect", [
+        (y1, r1, [1.0]),
+        (y1, r2, [5.0]),
+        (y3, r2, [float('nan')]),
+        (y1, [r1, r2], [1.0, 5.0]),
+        ([y1, y3], [r1, r2], [1.0, float('nan')])
+    ])
+    def test_score(self, y_gold, y_pred, expect):
+        y_gold = BinaryLabels.from_positive_indices(y_gold)
+        if len(y_pred) == 0 or [] in y_pred:
+            with pytest.warns(UserWarning):
+                y_pred = Rankings.from_ranked_indices(y_pred)
+        else:
+            y_pred = Rankings.from_ranked_indices(y_pred)
+        pred = FirstRelevantRank().score(y_gold, y_pred).tolist()
         assert pred == approx(expect, nan_ok=True)
 
 
@@ -336,8 +396,12 @@ class TestDCG:
             5.616107762, 8.656170245], {})
     ])
     def test_score(self, y_gold, y_pred, expect, params):
-        y_gold = NumericLabels.from_dense(y_gold)
-        y_pred = Rankings.from_ranked_indices(y_pred)
+        y_gold = NumericLabels.from_matrix(y_gold)
+        if len(y_pred) == 0 or [] in y_pred:
+            with pytest.warns(UserWarning):
+                y_pred = Rankings.from_ranked_indices(y_pred)
+        else:
+            y_pred = Rankings.from_ranked_indices(y_pred)
         pred = DCG(3, **params).score(y_gold, y_pred).tolist()
         assert pred == approx(expect, nan_ok=True)
 
@@ -357,8 +421,12 @@ class TestNDCG:
                                   8.501497843, 8.656170245 / 9.033953658], {})
     ])
     def test_numeric_score(self, y_gold, y_pred, expect, params):
-        y_gold = NumericLabels.from_dense(y_gold)
-        y_pred = Rankings.from_ranked_indices(y_pred)
+        y_gold = NumericLabels.from_matrix(y_gold)
+        if len(y_pred) == 0 or y_pred == r3 or [] in y_pred:
+            with pytest.warns(UserWarning):
+                y_pred = Rankings.from_ranked_indices(y_pred)
+        else:
+            y_pred = Rankings.from_ranked_indices(y_pred)
         pred = NDCG(3, **params).score(y_gold, y_pred).tolist()
         assert pred == approx(expect, nan_ok=True)
 
@@ -370,7 +438,12 @@ class TestNDCG:
         ([y1, y6], [r1, rn2], [1.956593383 / 2.352934268, 1.631586747 / 2.352934268], {})
     ])
     def test_binary_score(self, y_gold, y_pred, expect, params):
+        print(y_gold, y_pred)
         y_gold = BinaryLabels.from_positive_indices(y_gold)
-        y_pred = Rankings.from_ranked_indices(y_pred)
+        if len(y_pred) == 0 or [] in y_pred:
+            with pytest.warns(UserWarning):
+                y_pred = Rankings.from_ranked_indices(y_pred)
+        else:
+            y_pred = Rankings.from_ranked_indices(y_pred)
         pred = NDCG(10, **params).score(y_gold, y_pred).tolist()
         assert pred == approx(expect, nan_ok=True)
