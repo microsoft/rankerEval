@@ -36,7 +36,7 @@ Usage
     y_pred = Rankings.from_ranked_indices([[2,1], [1]])
 
     recall_at_3 = Recall(3).mean(y_true, y_pred)
-    print(recall_at_3["score"])
+    print(recall_at_3)
 
 
 To get confidence intervals (95% by default), specify ``conf_interval=True``:
