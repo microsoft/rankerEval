@@ -173,19 +173,21 @@ class NumericLabels(BinaryLabels):
 
 
 class SparseMatrix(object):
+    """
+    Stores sparse matrix data in unsorted CSR format (i.e., column indices in each row are unsorted).
+    """
     def __init__(self, idx_ptr, col_idx, data, shape=None):
-        self.idx_ptr = idx_ptr
-        self.col_idx = col_idx
-        self.data = data
+        self.idx_ptr = idx_ptr.copy()
+        self.col_idx = col_idx.copy()
+        self.data = data.copy()
         if shape:
             self.shape = shape
         else:
             if len(col_idx):
-                M = col_idx.max()
+                M = col_idx.max() + 1
             else:
                 M = 0
             self.shape = (len(idx_ptr) - 1, M)
-        self.csr = sp.csr_matrix((self.data, self.col_idx, self.idx_ptr), copy=False, shape=self.shape)
 
     @classmethod
     def from_values(cls, data, keep_zeros=False):
@@ -234,7 +236,6 @@ class SparseMatrix(object):
             raise ValueError("Invalid input type.")
         if len(rows) == 0 or np.ndim(rows[0]) == 0:
             rows = [rows]
-
         idx_ptr = np.asarray([0] + [len(x) for x in rows], dtype=int).cumsum()
         try:
             col_idx = np.fromiter(itertools.chain.from_iterable(rows), dtype=int, count=idx_ptr[-1])
@@ -248,10 +249,9 @@ class SparseMatrix(object):
             raise ValueError("Invalid values in input.")
         if len(data) != len(col_idx):
             raise ValueError("rows and data need to have same length")
-
         instance = cls(idx_ptr, col_idx, data)
         if not keep_zeros:
-            instance.csr.eliminate_zeros()
+            instance.eliminate_zeros()
         return instance
 
     def max_nnz_row_values(self):
@@ -276,16 +276,21 @@ class SparseMatrix(object):
     def remove_infinite(self):
         if not self.isfinite():
             self.data[~np.isfinite(self.data)] = 0
-            self.csr.eliminate_zeros()
+            self.eliminate_zeros()
 
+    def eliminate_zeros(self):
+        csr = self.tocsr()
+        csr.eliminate_zeros()
+        self.data, self.col_idx, self.idx_ptr = csr.data, csr.indices, csr.indptr
+        
     def _setop(self, other, mode):
         if self.shape[0] != other.shape[0]:
             raise ValueError("Matrices need to have the same number of rows!")
         self._numba_setop(self.idx_ptr, self.col_idx, self.data, other.idx_ptr, other.col_idx, mode)
-        self.csr.eliminate_zeros()
-
+        self.eliminate_zeros()
+            
     def tocsr(self):
-        return self.csr
+        return sp.csr_matrix((self.data, self.col_idx, self.idx_ptr), copy=False, shape=self.shape)
 
     def tolil(self):
         res = []
@@ -293,10 +298,9 @@ class SparseMatrix(object):
             start, end = self.idx_ptr[i], self.idx_ptr[i+1]
             res += [self.col_idx[start:end].tolist()]
         return res
-
+    
     def todense(self):
-        pointers = (self.col_idx, self.col_idx, self.idx_ptr)
-        return np.asarray(sp.csr_matrix(pointers, copy=False, shape=self.shape).todense())
+        return np.asarray(self.tocsr().todense())
 
     @staticmethod
     @numba.njit(parallel=True)
@@ -345,7 +349,7 @@ class Rankings(object):
         n_empty_rows = indices.count_empty_rows()
         if n_empty_rows and warn_empty:
             warnings.warn(f"Input rankings have {n_empty_rows} empty rankings (rows). "
-                          + "These will impact the mean scores." + str(indices.csr.todense()),
+                          + "These will impact the mean scores." + str(indices.todense()),
                           InvalidValuesWarning)
         self.indices = indices
 
