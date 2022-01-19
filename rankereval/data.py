@@ -176,6 +176,7 @@ class SparseMatrix(object):
     """
     Stores sparse matrix data in unsorted CSR format (i.e., column indices in each row are unsorted).
     """
+
     def __init__(self, idx_ptr, col_idx, data, shape=None):
         self.idx_ptr = idx_ptr.copy()
         self.col_idx = col_idx.copy()
@@ -282,13 +283,13 @@ class SparseMatrix(object):
         csr = self.tocsr()
         csr.eliminate_zeros()
         self.data, self.col_idx, self.idx_ptr = csr.data, csr.indices, csr.indptr
-        
+
     def _setop(self, other, mode):
         if self.shape[0] != other.shape[0]:
             raise ValueError("Matrices need to have the same number of rows!")
         self._numba_setop(self.idx_ptr, self.col_idx, self.data, other.idx_ptr, other.col_idx, mode)
         self.eliminate_zeros()
-            
+
     def tocsr(self):
         return sp.csr_matrix((self.data, self.col_idx, self.idx_ptr), copy=False, shape=self.shape)
 
@@ -298,7 +299,7 @@ class SparseMatrix(object):
             start, end = self.idx_ptr[i], self.idx_ptr[i+1]
             res += [self.col_idx[start:end].tolist()]
         return res
-    
+
     def todense(self):
         return np.asarray(self.tocsr().todense())
 
