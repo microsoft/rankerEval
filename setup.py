@@ -26,7 +26,7 @@ setup(
     long_description_content_type="text/x-rst",
     packages=find_packages(exclude=('tests', 'docs', 'test')),
 
-    install_requires=['numpy>=1.18', 'numba>=0.53.0', 'scipy>=1.0'],
+    install_requires=['numpy>=1.18,<1.22', 'numba>=0.53.0', 'scipy>=1.0'],
     python_requires='>=3.6',
 
     classifiers=[
