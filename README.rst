@@ -53,14 +53,14 @@ RankerEval allows for a variety of input formats, e.g.,
 .. code-block:: python
 
     # specify all labels as lists
-    y_true = BinaryLabels.from_dense([[1,0,1], [1,1,1]])
+    y_true = BinaryLabels.from_matrix([[1,0,1], [1,1,1]])
     
     # specify labels as numpy array
-    y_true = BinaryLabels.from_dense(np.asarray([[1,0,1], [1,1,1]]))
+    y_true = BinaryLabels.from_matrix(np.asarray([[1,0,1], [1,1,1]]))
     
     # or use a sparse matrix
     import scipy.sparse as sp
-    y_true = BinaryLabels.from_sparse(sp.coo_matrix([[1,0,1], [1,1,1]]))
+    y_true = BinaryLabels.from_matrix(sp.coo_matrix([[1,0,1], [1,1,1]]))
 
 
     

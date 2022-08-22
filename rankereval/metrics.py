@@ -922,7 +922,7 @@ class DCG(Metric):
         --------
         >>> from rankereval import NumericLabels, Rankings, DCG
         >>> # use separate labels for each ranking
-        >>> y_true = NumericLabels.from_dense([[1, 2, 3], [4, 5]])
+        >>> y_true = NumericLabels.from_matrix([[1, 2, 3], [4, 5]])
         >>> y_pred = Rankings.from_ranked_indices([[0,2,1], [1,0]])
         >>> DCG(3).score(y_true, y_pred) # doctest: +NORMALIZE_WHITESPACE
         array([ 5.61610776, 10.85443211])
@@ -1002,7 +1002,7 @@ class NDCG(DCG):
         --------
         >>> from rankereval import NumericLabels, Rankings, NDCG
         >>> # use separate labels for each ranking
-        >>> y_true = NumericLabels.from_dense([[1, 2, 3], [4, 5]])
+        >>> y_true = NumericLabels.from_matrix([[1, 2, 3], [4, 5]])
         >>> y_pred = Rankings.from_ranked_indices([[0,2,1], [1,0]])
         >>> NDCG(3).score(y_true, y_pred) # doctest: +NORMALIZE_WHITESPACE
         array([0.81749351, 1.        ])
